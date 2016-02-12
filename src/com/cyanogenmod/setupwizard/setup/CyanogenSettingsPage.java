@@ -31,6 +31,7 @@ import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.IWindowManager;
 import android.view.View;
@@ -38,6 +39,7 @@ import android.view.WindowManagerGlobal;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
+import com.android.internal.widget.LockPatternUtils;
 import com.cyanogenmod.setupwizard.R;
 import com.cyanogenmod.setupwizard.SetupWizardApp;
 import com.cyanogenmod.setupwizard.ui.SetupPageFragment;
@@ -127,6 +129,7 @@ public class CyanogenSettingsPage extends SetupPage {
             }
         });
         handleDefaultThemeSetup();
+        handleDefaultLockscreenSetup();
     }
 
     private void handleDefaultThemeSetup() {
@@ -138,6 +141,24 @@ public class CyanogenSettingsPage extends SetupPage {
             tm.applyDefaultTheme();
         } else {
             getCallbacks().finishSetup();
+        }
+    }
+
+    private void handleDefaultLockscreenSetup() {
+        String defaultLockscreenComponent = mContext.getResources().getString(
+                R.string.default_custom_lockscreen_component);
+        if (!TextUtils.isEmpty(defaultLockscreenComponent)) {
+            ComponentName cn =
+                    ComponentName.unflattenFromString(defaultLockscreenComponent);
+            if (cn != null) {
+                try {
+                    Log.i(TAG, "Applying default lockscreen");
+                    LockPatternUtils util = new LockPatternUtils(mContext);
+                    util.setThirdPartyKeyguard(cn);
+                } catch (PackageManager.NameNotFoundException | SecurityException e) {
+                    Log.w(TAG, "Error setting default lockscreen: " + cn, e);
+                }
+            }
         }
     }
 
